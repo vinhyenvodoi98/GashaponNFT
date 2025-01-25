@@ -8,14 +8,14 @@ export default function HomePage() {
   const [collections, setCollections] = useState([])
 
   useEffect(() => {
-    const getUserCollection = async (address: `0x${string}`) => {
-      const bgResponse = await fetch(`/api/collections?creator=${address}`);
+    const getUserCollection = async () => {
+      const bgResponse = await fetch(`/api/collections`);
       const response = await bgResponse.json()
       setCollections(response.collections)
     }
 
-    if(address) getUserCollection(address)
-  }, [address])
+    getUserCollection()
+  }, [])
 
   return (
     <Layout>

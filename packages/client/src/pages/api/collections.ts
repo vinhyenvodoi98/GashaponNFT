@@ -32,21 +32,16 @@ export default async function handler(
     }
   } else if (req.method === 'GET') {
     try {
-      const { creator } = req.query;
 
       try {
         const collections = db.collection('mantle_collections');
 
-        if (creator) {
-          // Get all projects by creator
-          const result = await collections.find({creator}).toArray();
-          if (result.length === 0) {
-            return res.status(404).json({ message: 'Not found' })
-          } else {
-            return res.status(201).json({ message: 'Get projects successfully', collections: result })
-          }
+        // Get all projects by creator
+        const result = await collections.find({}).toArray();
+        if (result.length === 0) {
+          return res.status(404).json({ message: 'Not found' })
         } else {
-          return res.status(400).json({ message: 'Invalid query parameters' })
+          return res.status(201).json({ message: 'Get projects successfully', collections: result })
         }
       } catch (error) {
         console.error('Error getting project:', error);
