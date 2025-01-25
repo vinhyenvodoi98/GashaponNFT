@@ -1,0 +1,51 @@
+# Generative AI NFT Gashapon
+
+## Overview
+
+**Generative AI NFT Gashapon** is an innovative platform where creators and users interact in a unique NFT ecosystem powered by generative AI. This project combines the excitement of gashapon games with the creativity of AI-generated NFTs, offering a dynamic and interactive experience.
+
+### Key Features
+1. **NFT Creation by Creators**:
+   Creators can design NFTs by defining unique prompts for the generative AI, ensuring each NFT has its distinct style and personality.
+
+2. **Gashapon for Users**:
+   Users can play the gashapon machine to mint NFTs with varying rarity levels, adding an element of chance and excitement to the process.
+
+3. **AI-Generated Artwork**:
+   Each NFT is generated in real-time using AI, ensuring uniqueness and creative diversity.
+
+
+### Technology Stack
+
+#### Blockchain Integration
+- **ORA**:
+   Utilized as an AI oracle on the blockchain to ensure secure and decentralized AI generation processes.
+
+#### Frontend
+- **Next.js**:
+   Used for building a fast, interactive, and responsive user interface.
+
+#### Backend
+- **MongoDB**:
+   Provides a robust and scalable database solution for storing NFT metadata
+
+### How It Works
+
+1. **For Creators**:
+   - Define prompts and configure NFT characteristics.
+   - Submit the details for NFT generation using generative AI.
+
+2. **For Users**:
+   - Play the gashapon machine by paying a fee.
+   - Receive a randomly generated NFT with a rarity level.
+   - Enjoy the unique, AI-generated NFT artwork.
+
+3. **AI Generation**:
+   - The platform invokes the ORA AI oracle to generate NFT visuals in real-time based on predefined prompts.
+   https://docs.ora.io/doc/introduction/about-ora
+
+4. **Blockchain Security**:
+   - Minted NFTs and rarity data are stored securely on the blockchain for transparency and ownership verification.
+
+## License
+This project is licensed under the MIT License.

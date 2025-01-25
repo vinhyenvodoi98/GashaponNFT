@@ -22,7 +22,7 @@ const { chains, publicClient } = configureChains(
 
         if (chain.id === sepolia.id)
           return {
-            http: sepolia.rpcUrls.public.http[0],
+            http: "https://sepolia.gateway.tenderly.co",
           };
 
         return null;

@@ -32,6 +32,12 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
         bytes callbackData
     );
 
+    event NFTMinted(
+        address recipient,
+        uint256 tokenId,
+        uint8 rarity
+    );
+
     event promptRequest(
         uint256 requestId,
         address sender,
@@ -61,6 +67,8 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
     // modelId => callback gasLimit
     mapping(uint256 => uint64) public callbackGasLimit;
 
+    mapping(uint256 => uint256) public requestIdToTokenId;
+
     /// @notice Initialize the contract, binding it to a specified AIOracle.
     constructor(IAIOracle _aiOracle, string memory _tokenName, string memory _tokenSymbol , string memory _prompt, uint256 _price , address _creator) ERC721(_tokenName, _tokenSymbol) AIOracleCallbackReceiver(_aiOracle) {
         prompt = _prompt;
@@ -68,8 +76,8 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
         transferOwnership(_creator);
     }
 
-    function setCallbackGasLimit(uint64 gasLimit) external onlyOwner {
-        callbackGasLimit[503] = gasLimit;
+    function setCallbackGasLimit(uint256 modelId, uint64 gasLimit) external onlyOwner {
+        callbackGasLimit[modelId] = gasLimit;
     }
 
     function randomRarity() internal view returns (uint8) {
@@ -77,22 +85,6 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
         uint8 _rarity = uint8(randomHash % 100) + 1;
 
         return _rarity;
-    }
-
-    function mintNFT(address recipient, string memory tokenURI)
-        public payable
-        returns (uint256)
-    {
-        require(msg.value == price, "Incorrect ETH value sent");
-        _tokenIds.increment();
-
-        uint256 newItemId = _tokenIds.current();
-        rarity[newItemId] = randomRarity();
-
-        _mint(recipient, newItemId);
-        _setTokenURI(newItemId, tokenURI);
-
-        return newItemId;
     }
 
     function getAIResult(uint256 modelId, string calldata _prompt) external view returns (string memory) {
@@ -106,6 +98,7 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
         require(request.sender != address(0), "request not exists");
         request.output = output;
         prompts[request.modelId][string(request.input)] = string(output);
+        _setTokenURI(requestIdToTokenId[requestId], string(output));
         emit promptsUpdated(requestId, request.modelId, string(request.input), string(output), callbackData);
     }
 
@@ -113,16 +106,31 @@ contract MantleMistrery is AIOracleCallbackReceiver, ERC721URIStorage, Ownable  
         return aiOracle.estimateFee(modelId, callbackGasLimit[modelId]);
     }
 
-    function calculateAIResult(string calldata _prompt) payable external {
-        bytes memory input = bytes(_prompt);
+    function mintNFT(address recipient, uint256 modelId) payable external  {
+        require(msg.value > price, "Incorrect ETH value sent");
+        _tokenIds.increment();
+        uint256 newItemId = _tokenIds.current();
+        rarity[newItemId] = randomRarity();
+
+        _mint(recipient, newItemId);
+        bytes memory input = bytes(prompt);
         // we do not need to set the callbackData in this example
-        uint256 requestId = aiOracle.requestCallback{value: msg.value}(
-            503, input, address(this), callbackGasLimit[503], ""
+        uint256 requestId = aiOracle.requestCallback{value: msg.value - price}(
+            modelId, input, address(this), callbackGasLimit[modelId], ""
         );
+
         AIOracleRequest storage request = requests[requestId];
         request.input = input;
         request.sender = msg.sender;
-        request.modelId = 503;
-        emit promptRequest(requestId, msg.sender, 503, _prompt);
+        request.modelId = modelId;
+        requestIdToTokenId[requestId] = newItemId;
+        emit promptRequest(requestId, msg.sender, modelId, prompt);
+        emit NFTMinted(recipient, newItemId, rarity[newItemId]);
+    }
+
+    function withdraw() external onlyOwner {
+        require(address(this).balance > 0, "No ETH to withdraw");
+        // transfer profit to owner
+        payable(owner()).transfer(address(this).balance);
     }
 }

@@ -4,7 +4,7 @@ import Loading from '@/components/Loading';
 import Wallet from '@/components/Providers/wallet';
 import UploadImage from '@/components/UploadImage';
 import { uploadWeb3Storage, web3StorageLink } from "@/services/web3Storage"
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAccount, useContractEvent, useContractWrite } from 'wagmi';
 import NFTFactory from '../../../contracts-foundry/out/MantleMistrery.sol/NFTFactory.json'
@@ -19,6 +19,8 @@ export default function DeployContract() {
     const [prompt, setPrompt] = useState('')
     const [status, setStatus] = useState(0)
     const [cid, setCid] = useState('')
+    const [isSuccess, setIsSuccess] = useState(false)
+    const [nftContract, setNftContract] = useState('')
 
     const { address } = useAccount();
 
@@ -42,29 +44,34 @@ export default function DeployContract() {
       abi: NFTFactory.abi,
       eventName: 'NFTContractCreated',
       async listener(log:any){
-        await uploadContractData(cid, log[0].args.nftContract,name,symbol,prompt,price)
-        setStatus(0) // set contract
-        toast.success(`Contract deployed address: ${log[0].args.nftContract}`)
+        setNftContract(log[0].args.nftContract)
+        setIsSuccess(true)
       },
     })
 
-    const uploadContractData = async (cid:string, contractAddress:any, name:string,symbol:string,prompt:string,price:number) => {
-      console.log(name,symbol,prompt,price)
-      const body = {
-        creator: address as string,
-        image: cid,
-        name: name,
-        symbol: symbol,
-        contractAddress,
-        prompt,
-        price: parseEther(price.toString()).toString()
+    useEffect(() => {
+      const updateCollection = async() => {
+        console.log(name,symbol,prompt,price)
+        const body = {
+          creator: address as string,
+          image: cid,
+          name: name,
+          symbol: symbol,
+          contractAddress: nftContract,
+          prompt,
+          price: parseEther(price.toString()).toString()
+        }
+        await fetch('/api/collections', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        setStatus(0) // set contract
+        toast.success(`Contract deployed address: ${nftContract}`)
       }
-      await fetch('/api/collections', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-
-    }
+      if(isSuccess && nftContract){
+        updateCollection()
+      }
+    }, [isSuccess, nftContract])
 
     return (
       <div className="min-h-main flex items-center justify-center">

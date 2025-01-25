@@ -11,7 +11,6 @@ export default async function handler(
     try {
       try {
         const data = JSON.parse(req.body)
-        console.log(data)
         // TODO validate data
         const collections = db.collection('mantle_collections');
         const result = await collections.insertOne({
