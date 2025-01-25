@@ -31,3 +31,9 @@ export function chunk<T extends Sliceable>(str: T, size: number) {
   }
   return R;
 }
+
+export function shortenAddress(address: string, capitalize?: boolean) {
+  const shortened =
+    address.substring(0, 5) + '...' + address.substring(address.length - 4);
+  return shortened;
+}

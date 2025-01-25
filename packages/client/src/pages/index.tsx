@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi';
 import Layout from '@/components/layout/Layout';
 
 import { toast } from "react-toastify";
+import Collections from '@/components/Collections';
 
 export default function HomePage() {
   const { address } = useAccount();
@@ -22,8 +23,10 @@ export default function HomePage() {
 
   return (
     <Layout>
-      <div>{address}</div>
-      <button onClick={() => addNotification()}>Notification</button>
+      <div className='container m-auto min-h-main mt-10'>
+        <h1 className='mb-10'>Collections</h1>
+        <Collections collections={[1,2,3,4]}/>
+      </div>
     </Layout>
   );
 }
