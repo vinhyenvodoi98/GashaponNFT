@@ -11,6 +11,7 @@ export default async function handler(
     try {
       try {
         const data = JSON.parse(req.body)
+        console.log(data)
         // TODO validate data
         const collections = db.collection('mantle_collections');
         const result = await collections.insertOne({
@@ -19,7 +20,7 @@ export default async function handler(
           name: data.name,
           symbol: data.symbol,
           contractAddress: data.contractAddress,
-          prompt: data.symbol,
+          prompt: data.prompt,
           price: data.price,
         });
         return res.status(201).json({ message: 'Project added successfully', projectId: result.insertedId })

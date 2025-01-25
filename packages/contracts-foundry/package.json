@@ -6,7 +6,7 @@
   "scripts": {
     "build": "forge clean && forge build",
     "local": "anvil -a 5",
-    "deploy": "source .env && forge create --rpc-url https://rpc.sepolia.mantle.xyz --private-key $PRIVATE_KEY --legacy --json src/MantleMistrery.sol:MantleMistrery > contractInfo.json"
+    "deploy": "source .env && forge create --rpc-url https://rpc.sepolia.mantle.xyz --private-key $PRIVATE_KEY --legacy --json src/MantleMistrery.sol:NFTFactory --constructor-args '0x0A0f4321214BB6C7811dD8a71cF587bdaF03f0A0' 'a shiba dog running'> contractInfo.json"
   },
   "keywords": [],
   "author": "",

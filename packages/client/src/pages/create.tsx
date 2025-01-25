@@ -4,9 +4,12 @@ import Loading from '@/components/Loading';
 import Wallet from '@/components/Providers/wallet';
 import UploadImage from '@/components/UploadImage';
 import { uploadWeb3Storage, web3StorageLink } from "@/services/web3Storage"
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAccount } from 'wagmi';
+import { useAccount, useContractEvent, useContractWrite } from 'wagmi';
+import NFTFactory from '../../../contracts-foundry/out/MantleMistrery.sol/NFTFactory.json'
+import NFTFactoryAddress from  '../../../contracts-foundry/contractInfo.json'
+import { parseEther } from 'viem';
 
 export default function DeployContract() {
     const [image, setImage] = useState<File | null>(null);
@@ -16,22 +19,37 @@ export default function DeployContract() {
     const [prompt, setPrompt] = useState('')
     const [status, setStatus] = useState(0)
     const [cid, setCid] = useState('')
-    const [isSuccess, setIsSuccess] = useState(false)
 
     const { address } = useAccount();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
+    const handleSubmit = async () => {
       setStatus(1) // start upload
-      const cid = await uploadWeb3Storage(image)
-      setCid(web3StorageLink(cid))
-      // sendAsync()
-      console.log(cid)
-      await uploadContractData(web3StorageLink(cid), "")
-      setStatus(0) // set contract
+      const img_cid = await uploadWeb3Storage(image)
+      setCid(web3StorageLink(img_cid))
+      write({
+        args: [name,symbol,prompt,parseEther(price.toString()).toString()],
+      })
     };
 
-    const uploadContractData = async (cid:any, contractAddress:any) => {
+    const { write } = useContractWrite({
+      address: NFTFactoryAddress.deployedTo as `0x${string}`,
+      abi: NFTFactory.abi,
+      functionName: 'createNFT',
+    })
+
+    useContractEvent({
+      address: NFTFactoryAddress.deployedTo as `0x${string}`,
+      abi: NFTFactory.abi,
+      eventName: 'NFTContractCreated',
+      async listener(log:any){
+        await uploadContractData(cid, log[0].args.nftContract,name,symbol,prompt,price)
+        setStatus(0) // set contract
+        toast.success(`Contract deployed address: ${log[0].args.nftContract}`)
+      },
+    })
+
+    const uploadContractData = async (cid:string, contractAddress:any, name:string,symbol:string,prompt:string,price:number) => {
+      console.log(name,symbol,prompt,price)
       const body = {
         creator: address as string,
         image: cid,
@@ -39,14 +57,13 @@ export default function DeployContract() {
         symbol: symbol,
         contractAddress,
         prompt,
-        price
+        price: parseEther(price.toString()).toString()
       }
-      const bgResponse = await fetch('/api/collections', {
+      await fetch('/api/collections', {
         method: 'POST',
         body: JSON.stringify(body),
       });
 
-      console.log(bgResponse)
     }
 
     return (
@@ -58,7 +75,7 @@ export default function DeployContract() {
           </h1>
           <p className='mb-4'>You will need to deploy an ERC-721 contract onto the blockchain before you can create a drop.</p>
 
-          <form className="p-6 rounded-lg" onSubmit={handleSubmit}>
+          <div className="p-6 rounded-lg">
 
             {/* Image Upload */}
             <div className="mb-10">
@@ -116,7 +133,7 @@ export default function DeployContract() {
                 Price
               </label>
               <input
-                type="text"
+                type="number"
                 id="price"
                 className="input input-bordered block w-full text-gray-700 border border-gray-300 p-2"
                 value={price}
@@ -129,7 +146,7 @@ export default function DeployContract() {
             {
               address ?
                 <button
-                  type="submit"
+                  onClick={() => handleSubmit()}
                   className="w-full btn btn-primary text-white py-2 px-4 rounded-full transition"
                 >
                   Create
@@ -138,7 +155,7 @@ export default function DeployContract() {
                   <Wallet/>
                 </div>
             }
-          </form>
+          </div>
         </div>
       </div>
     );
